@@ -1,0 +1,285 @@
+---
+title: "Assignment 01"
+author: "Jawad Adil - 3049429"
+date: "3/29/2021"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(error = TRUE)
+```
+
+# Getting the data from CSV file
+```{r DiamondData}
+#Import the dataset
+DiamondData <- read.csv("C:/Users/jawad adil/Downloads/DiamondData.csv")
+
+#Get a subset of data for testing
+s <- sample(nrow(DiamondData), size=10000, replace = FALSE, prob = NULL)
+s <- DiamondData[s, ]
+
+#Getting original data again for final report
+s<- DiamondData
+```
+
+## Task 1 - omit/replace NA/incorrect values
+```{r Task1}
+
+#omitting NA values
+s<-na.omit(s)
+
+#correcting spelling for cut attribute
+s$cut[s$cut == "Very Geod"] <-"Very Good"
+
+
+#limiting the carat to given range, if the carat is greater than given range,
+#set it to maximum value
+s$carat<-replace(s$carat,s$carat>5.01,5.01)
+```
+\newpage
+## Task 2 - Get summary of variables and draw pie,bar char, histogram and scatter plot for appropriate variables
+```{r Task2}
+#Get the summary of variables
+summary(s)
+
+#separate the numeric data to get variance
+numeric_data <- data.frame(s$price,s$carat,s$depth,s$table,s$x,s$y,s$z)
+#get the variance of numeric variables
+var(numeric_data)
+```
+\newpage
+```{r Task2a}
+
+#pie chart for cut variable
+pie(table(factor(s$cut)),main = "Pie chart for CUT property",labels = paste(levels(factor(s$cut)),
+    paste(", Total = ",table(s$cut))),col=rainbow(nrow(table(s$cut))))
+```
+\newpage
+```{r Task2b}
+#bar plot for the color variable
+barplot <- barplot(table(factor(s$color)),col=rainbow(nrow(table(s$color))),
+                   xlab = "Colors",ylab = "Frequency",ylim=c(0,12000))
+#printing counts on the bars of bar chart
+text(barplot,table(s$color)+500,paste(table(s$color)) ,cex=1)
+grid(col = "black")
+```
+\newpage
+```{r Task2c}
+#histogram for depth variable
+hist1 <- hist(s$depth,main = "Depth Histogram", ylab = "Frequency",xlab = "Depth",
+              ,ylim=c(0,30000),col=rainbow(10))
+#printing counts on the histogram
+text(hist1$mids+0.8,hist1$counts+3000,labels = hist1$counts,adj=c(0.5, -0.5),srt=90)
+grid(col = "black")
+```
+This histogram is showing normality. Count of each value is shown on the top of bars.
+\newpage
+```{r Task2d}
+#scatter plot for carat vs depth variables
+plot(s$carat,s$depth,xlab = "Carat",ylab = "Depth",pch=20,col="#3299a8")
+abline(lm(s$depth~s$carat),col="#9c32a8",lwd="3")
+grid(col = "black")
+#finding correlation
+cor(s$carat,s$depth)
+```
+This Graph is showing normality and the relationship among them is very weak. Correlation function also results the same.
+\newpage
+
+## Task 3:
+
+### 3A: histogram of price variable
+
+```{r Task3a}
+#histogram of price variable
+histPrice <- hist(s$price,main = "Price Histogram", ylab = "Frequency",xlab = "Price",
+     col=rainbow(10),xlim=c(0,20000),ylim=c(0,15000))
+#printing counts on the bars of histogram
+text(histPrice$mids+500,histPrice$counts+1500,labels = histPrice$counts,adj=c(0.5, -0.5),srt=90)
+#printing the summary on the histogram using text function
+text(15000,12000,paste("Median:",summary(s$price)[3]),pos=3,col="Blue")
+text(15000,11000,paste("Mean:",as.integer(summary(s$price)[4])),pos=3,col="Blue")
+text(15000,10000,paste("Variance:",as.integer(var(s$price))),pos=3,col="Blue")
+text(15000,9000,paste("Max:",summary(s$price)[6]),pos=3,col="Blue")
+text(15000,8000,paste("Min:",summary(s$price)[1]),pos=3,col="Blue")
+grid(col = "black")
+```
+\newpage
+
+### 3B: Group Diamonds by some price ranges and summerize them separately
+```{r Task3b}
+#divide the price variable into 3 groups
+
+#low are those values which are less than 1st Quartile
+low <- subset(s,price<=summary(s$price)[2])
+
+#med are those values which are less than 3rd Quartile
+med <- subset(s,price<=summary(s$price)[5] & price>summary(s$price)[2])
+
+#all other greater values are high values
+high <- subset(s,price > summary(s$price)[5])
+
+#printing the count of low values
+nrow(low)
+#summary of low variable values
+summary(low)
+```
+\newpage
+```{r Task3bb}
+#printing the count of med values
+nrow(med)
+#summary of med variable values
+summary(med)
+```
+\newpage
+```{r Task3bbb}
+#printing the count of high values
+nrow(high)
+#summary of high variable values
+summary(high)
+```
+\newpage
+
+### 3C: Exploring different cut types using boxplot
+```{r Task3c}
+#Price vs Cut box plot
+boxplot(s$price~s$cut,main="Price vs Cut distribution",xlab = "Cut",ylab = "Price",
+        col=rainbow(nrow(table(s$cut))))
+grid()
+```
+\newpage
+
+### 3D: Finding relation of attributes with price
+```{r Task3D}
+#separate numeric data from actual dataset so we can directly use cor() function
+numeric_data <- data.frame(s$price,s$carat,s$depth,s$table,s$x,s$y,s$z)
+
+#finding the correlation between variables.
+cor(numeric_data)
+```
+Price is correlated most with the X variable, Y is the 2nd high correlated variable with price and Z is the 3rd most correlated variable. Simply, the order of correlation is: 
+
+### Most Strong: 
+#### X variable 
+### Mid Strong: 
+#### Y variable 
+### Least Strong: 
+#### Z variable
+#### All other variables have less strong relationship with price than these variables.
+
+\newpage
+
+## Task 4:
+
+### 4A: compute the volume & plot price vs volume graph
+```{r Task4a}
+#separating x, y, z variables from dataset for better understanding
+x <- s[,8]
+y <- s[,9]
+z <- s[,10]
+
+#calculating volume variable
+volume <- x*y*z
+
+#binding old dataset and volume and storing them in new variable so old one
+#remain unchanged
+newData=cbind(s,volume)
+
+#getting price from new dataset
+price=newData[,7]
+
+#ploting graph between price & volume
+plot(volume,price,xlab = "Volume",ylab = "Price", main = "Price vs Volume distribution",
+     pch=20,col="#3299a8")
+abline(lm(price~volume),col="#9c32a8",lwd="3")
+grid(col="black")
+
+#finding correlation between price and volume
+cor(price,volume)
+```
+The graph shows direct and very strong relationship between price and volume, strength is also proven by correlation function.
+\newpage
+
+### 4B: Finding correlation between carat and volume & plotting them with regression line
+
+```{r Task4b}
+#plotting the graph between carat and volume
+plot(newData$carat,volume,xlab = "Carat",main = "Carat vs Volume distribution",
+     pch=20,col="#3299a8")
+
+#drawing a regression line on graph
+abline(lm(newData$carat ~ volume),col="#9c32a8",lwd="3")
+grid(col="black")
+
+#finding correlation between volume and carat
+cor(newData$carat, volume)
+
+```
+The graph shoes the strong correlation between volume and carat which is also proved by cor() function.
+\newpage
+
+### 4C: Exploring relationship of table and depth variables:
+
+```{r Task4C}
+#finding correlation between table and depth variables
+cor(newData$depth,newData$table)
+
+#plotting the relationship graph
+plot(newData$depth,newData$table,xlab = "Depth",ylab = "Table",
+     main = "Depth vs Table distribution",pch=20,col="#3299a8")
+
+#drawing regression line
+abline(lm(newData$depth~newData$table),col="#9c32a8",lwd="3")
+grid(col = "black")
+```
+The graph shows negative relationship which is also proven by the cor() function. 
+\newpage
+
+### 4D: Exploring relationship of table and rest of the variables:
+```{r Task4D}
+#ploting relationship between price and table
+plot(newData$price,newData$table,xlab = "Price",ylab = "Table",
+     main = "Price vs Table distribution",pch=20,col="#3299a8")
+
+#drawing regression line
+abline(lm(newData$price~newData$table),col="#9c32a8",lwd="3")
+grid(col = "black")
+
+#finding correlation between price and table
+cor(newData$table,newData$price)
+```
+The graph between price and table shows weak but positive relationship which is also proven by the cor() function. 
+\newpage
+```{r Task4Dd}
+#plotting carat vs table relationship
+plot(newData$carat,newData$table,xlab = "Carat",ylab = "Table"
+     ,main = "Carat vs Table distribution",pch=20,col="#3299a8")
+
+#plotting regression line
+abline(lm(newData$table~newData$carat),col="#9c32a8",lwd="3")
+grid()
+
+#finding correlation between table and carat
+cor(newData$table,newData$carat)
+
+```
+The Graph show weak but positive relationship between carat and table which is also proven by correlation function. Also, this graph is showing normality.
+
+\newpage
+```{r Task4Ddd}
+#plotting carat vs table relationship
+plot(newData$volume,newData$table,xlab = "Volume",ylab = "Table"
+     ,main = "Volume vs Table distribution",pch=20,col="#3299a8")
+
+#plotting regression line
+abline(lm(newData$table~newData$volume),col="#9c32a8",lwd="3")
+grid()
+
+#finding correlation between table and carat
+cor(newData$table,newData$volume)
+
+```
+The Graph between volume & table also shows a weak but positive relation which is also proven by correlation function. This graph is also showing normality as the line is going slighlty upward as we move right from left.
